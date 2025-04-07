@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${DB_USER:-xii_os}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-development}
+      POSTGRES_DB: ${DB_NAME:-xii_os_dev}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Transfer Portal Tracker Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_USER=${DB_USER:-xii_os}
+      - DB_PASSWORD=${DB_PASSWORD:-development}
+      - DB_NAME=${DB_NAME:-xii_os_dev}
+      - CACHE_EXPIRY=3600
+      - USE_247SPORTS=true
+      - USE_ON3=true
+      - USE_RIVALS=true
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data: 
