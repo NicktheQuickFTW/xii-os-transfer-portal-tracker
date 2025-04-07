@@ -1,105 +1,117 @@
-# XII-OS Transfer Portal Tracker
+# Notion Integration Module
 
-A comprehensive module for tracking and analyzing player transfers in real-time. Part of the XII-OS ecosystem.
+This module provides functionality for integrating Notion databases with XII-OS, allowing bidirectional data synchronization between platforms.
 
 ## Features
 
-- Real-time transfer monitoring
-- Player statistics tracking
-- Advanced analytics dashboard
-- Multi-source data collection (On3, 247Sports, Rivals)
-- RESTful API endpoints
-- Automated data scraping agents
+- Connect to Notion workspaces via Integration tokens
+- List and browse Notion databases
+- Query Notion database content
+- Sync data from Notion to XII-OS
+- Push XII-OS data to Notion databases
+- Maintain persistent connections to Notion teamspaces
 
-## Installation
+## Setup Instructions
 
-### Prerequisites
+1. **Create a Notion Integration**:
+   - Go to [Notion Developers](https://www.notion.com/my-integrations)
+   - Create a new integration for your workspace
+   - Set appropriate capabilities (Read Content, Update Content, etc.)
+   - Copy the integration token
 
-- Node.js (v18 or higher)
-- Python (v3.9 or higher)
-- PostgreSQL (v15 or higher)
+2. **Share Databases with the Integration**:
+   - In Notion, open the database you want to connect
+   - Click "Share" in the top-right
+   - Use the "@" symbol to invite your integration
+   - Grant appropriate permissions
 
-### Setup
-
-1. Clone the repository:
-```bash
-git clone https://github.com/your-username/xii-os-transfer-portal-tracker.git
-cd xii-os-transfer-portal-tracker
-```
-
-2. Install Node.js dependencies:
-```bash
-npm install
-```
-
-3. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-## Usage
-
-### Development
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-The server will be available at `http://localhost:3001`.
-
-### Production
-
-Build and start the production server:
-
-```bash
-npm run build
-npm start
-```
+3. **Add Integration to XII-OS**:
+   - Use the XII-OS API to create a new integration record
+   - Provide the integration token
+   - Test the connection
 
 ## API Endpoints
 
-### Player Data
+### Integration Management
 
-- `GET /api/transfer-portal-tracker/players` - Get all players
-- `GET /api/transfer-portal-tracker/players/search` - Search players by criteria
-- `GET /api/transfer-portal-tracker/stats` - Get transfer portal statistics
-- `GET /api/transfer-portal-tracker/trending` - Get trending transfers
-- `GET /api/transfer-portal-tracker/compare` - Compare players
-- `GET /api/transfer-portal-tracker/team-analysis` - Get team analysis
-- `GET /api/transfer-portal-tracker/predictions` - Get transfer predictions
+- `GET /api/notion/integrations` - List all Notion integrations
+- `GET /api/notion/integrations/:id` - Get specific integration
+- `POST /api/notion/integrations` - Add new integration
+- `PUT /api/notion/integrations/:id` - Update integration
+- `DELETE /api/notion/integrations/:id` - Delete integration
 
-## Configuration
+### Database Operations
 
-The module can be configured through environment variables:
+- `GET /api/notion/integrations/:id/databases` - List databases in workspace
+- `POST /api/notion/integrations/:integration_id/databases/:database_id/query` - Query database
 
-- `PORT` - Server port (default: 3001)
-- `DB_*` - Database configuration
-- `CACHE_EXPIRY` - Cache duration in seconds
-- `USE_247SPORTS` - Enable/disable 247Sports scraping
-- `USE_ON3` - Enable/disable On3 scraping
-- `USE_RIVALS` - Enable/disable Rivals scraping
+### Synchronization
 
-## Contributing
+- `POST /api/notion/integrations/:integration_id/databases/:database_id/sync-from-notion` - Pull data from Notion to XII-OS
+- `POST /api/notion/integrations/:integration_id/databases/:database_id/sync-to-notion` - Push data from XII-OS to Notion
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## Examples
 
-## License
+### Creating a New Integration
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```javascript
+fetch('/api/notion/integrations', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Big 12 Transfer Portal',
+    token: 'secret_abcdefghijklmnopqrstuvwxyz123456',
+    workspace_id: 'your-workspace-id',
+    description: 'Integration for managing transfer portal data'
+  })
+})
+```
 
-## Acknowledgments
+### Syncing Data from Notion
 
-- XII-OS Team
-- Data provided by On3, 247Sports, and Rivals 
+```javascript
+fetch('/api/notion/integrations/1/databases/abc123def456/sync-from-notion', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    target_table: 'players'
+  })
+})
+```
+
+### Pushing Data to Notion
+
+```javascript
+fetch('/api/notion/integrations/1/databases/abc123def456/sync-to-notion', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    source_table: 'players',
+    filters: { team: 'Texas' }
+  })
+})
+```
+
+## Database Schema
+
+The module creates a `notion_integrations` table with the following structure:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | integer | Primary key |
+| name | string | Name of the integration |
+| token | text | Notion API token (encrypted) |
+| workspace_id | string | Notion workspace ID |
+| description | text | Optional description |
+| active | boolean | Whether integration is active |
+| settings | jsonb | Additional settings |
+| last_sync | timestamp | Last synchronization time |
+| created_at | timestamp | Creation timestamp |
+| updated_at | timestamp | Last update timestamp |
+
+## Security Considerations
+
+- Notion tokens are stored securely in the database
+- All API requests are authenticated
+- Token validation occurs before any operations
+- Proper error handling prevents sensitive information exposure 
